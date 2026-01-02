@@ -18,11 +18,14 @@ struct CertainApp: App {
 }
 
 struct RootView: View {
+    @State private var showSplash = !UserDefaults.standard.bool(forKey: "hasSeenSplashScreen")
     @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
 
     var body: some View {
         Group {
-            if showOnboarding {
+            if showSplash {
+                SplashScreenView(isPresented: $showSplash)
+            } else if showOnboarding {
                 OnboardingView(isPresented: $showOnboarding)
             } else {
                 MainTabView()

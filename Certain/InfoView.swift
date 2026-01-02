@@ -241,20 +241,37 @@ struct InfoView: View {
                                 .stroke(Color(hex: "#736CED").opacity(0.15), lineWidth: 1)
                         )
 
-                        // Reset onboarding button
-                        Button(action: {
-                            resetOnboarding()
-                        }) {
-                            HStack {
-                                Image(systemName: "arrow.counterclockwise")
-                                Text("Show Onboarding Again")
+                        // Reset buttons
+                        VStack(spacing: 12) {
+                            Button(action: {
+                                resetSplashScreen()
+                            }) {
+                                HStack {
+                                    Image(systemName: "sparkles")
+                                    Text("Show Splash Animation Again")
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(Color(hex: "#736CED"))
+                                .padding(.vertical, 12)
+                                .frame(maxWidth: .infinity)
+                                .background(Color(hex: "#736CED").opacity(0.1))
+                                .cornerRadius(10)
                             }
-                            .font(.subheadline)
-                            .foregroundColor(Color(hex: "#736CED"))
-                            .padding(.vertical, 12)
-                            .frame(maxWidth: .infinity)
-                            .background(Color(hex: "#736CED").opacity(0.1))
-                            .cornerRadius(10)
+
+                            Button(action: {
+                                resetOnboarding()
+                            }) {
+                                HStack {
+                                    Image(systemName: "arrow.counterclockwise")
+                                    Text("Show Onboarding Again")
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(Color(hex: "#736CED"))
+                                .padding(.vertical, 12)
+                                .frame(maxWidth: .infinity)
+                                .background(Color(hex: "#736CED").opacity(0.1))
+                                .cornerRadius(10)
+                            }
                         }
 
                         // Version info
@@ -272,6 +289,22 @@ struct InfoView: View {
         }
         .sheet(isPresented: $showCertainPlus) {
             CertainPlusView()
+        }
+    }
+
+    private func resetSplashScreen() {
+        UserDefaults.standard.set(false, forKey: "hasSeenSplashScreen")
+        // Show an alert to inform the user
+        if let window = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first?.windows.first {
+            let alert = UIAlertController(
+                title: "Splash Screen Reset",
+                message: "Close and reopen the app to see the splash animation again.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            window.rootViewController?.present(alert, animated: true)
         }
     }
 
