@@ -11,6 +11,7 @@ struct OnboardingView: View {
     @Binding var isPresented: Bool
     @State private var currentPage = 0
     @State private var selectedPlan: SubscriptionPlan = .yearly
+    @State private var onboardingOpacity: Double = 1.0
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
 
     enum SubscriptionPlan {
@@ -97,11 +98,20 @@ struct OnboardingView: View {
                 .padding(.bottom, 8)
             }
         }
+        .opacity(onboardingOpacity)
     }
 
     private func completeOnboarding() {
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
-        isPresented = false
+
+        // Fade out before dismissing
+        withAnimation(.easeInOut(duration: 0.5)) {
+            onboardingOpacity = 0.0
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            isPresented = false
+        }
     }
 
     private func handlePurchase() {

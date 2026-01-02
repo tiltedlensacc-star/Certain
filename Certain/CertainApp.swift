@@ -20,6 +20,7 @@ struct CertainApp: App {
 struct RootView: View {
     @State private var showSplash = !UserDefaults.standard.bool(forKey: "hasSeenSplashScreen")
     @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+    @State private var mainAppOpacity: Double = 0.0
 
     var body: some View {
         Group {
@@ -29,6 +30,12 @@ struct RootView: View {
                 OnboardingView(isPresented: $showOnboarding)
             } else {
                 MainTabView()
+                    .opacity(mainAppOpacity)
+                    .onAppear {
+                        withAnimation(.easeIn(duration: 0.5)) {
+                            mainAppOpacity = 1.0
+                        }
+                    }
             }
         }
     }
