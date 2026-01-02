@@ -33,7 +33,7 @@ struct InfoView: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         // App Icon
-                        Image("AboutPageIcon")
+                        Image("HowItWorksIcon")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 80, height: 80)
