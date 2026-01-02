@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var showNotification = false
     @State private var notificationMessage = ""
     @State private var notificationIcon = ""
+    @State private var notificationColor: Color = .green
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
 
     var body: some View {
@@ -115,7 +116,7 @@ struct ContentView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
-                        .background(Color(hex: "#736CED"))
+                        .background(notificationColor.opacity(0.85))
                         .cornerRadius(12)
                         .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                         .padding(.top, 60)
@@ -128,7 +129,7 @@ struct ContentView: View {
             .sheet(isPresented: $showAddItem) {
                 AddItemView(onItemSaved: { itemType in
                     selectedTab = itemType
-                    showNotificationBanner(message: "Item added", icon: "checkmark.circle.fill")
+                    showNotificationBanner(message: "Item added", icon: "checkmark.circle.fill", color: Color(red: 0.3, green: 0.7, blue: 0.4))
                 })
             }
             .sheet(item: $confirmationItem) { item in
@@ -148,7 +149,7 @@ struct ContentView: View {
                 Button("Delete", role: .destructive) {
                     if let item = itemToDelete {
                         persistenceManager.deleteItem(item)
-                        showNotificationBanner(message: "Item deleted", icon: "trash.fill")
+                        showNotificationBanner(message: "Item deleted", icon: "trash.fill", color: Color(red: 0.9, green: 0.3, blue: 0.3))
                     }
                 }
             } message: {
@@ -249,9 +250,10 @@ struct ContentView: View {
         let _ = persistenceManager.unconfirmItem(item)
     }
 
-    private func showNotificationBanner(message: String, icon: String) {
+    private func showNotificationBanner(message: String, icon: String, color: Color) {
         notificationMessage = message
         notificationIcon = icon
+        notificationColor = color
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
             showNotification = true
         }
