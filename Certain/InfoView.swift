@@ -179,25 +179,6 @@ struct InfoView: View {
                         .background(Color(hex: "#736CED").opacity(0.1))
                         .cornerRadius(12)
 
-                        // Important Disclaimer
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.orange)
-                                Text("Important Disclaimer")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                            }
-
-                            Text("Certain is a record-keeping tool only. It records what you tell it you did, but cannot verify that doors are actually locked or appliances are actually off. You are solely responsible for physically performing all safety actions.")
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.orange.opacity(0.1))
-                        .cornerRadius(12)
-
                         // Legal & Support links
                         VStack(spacing: 16) {
                             Text("Legal & Support")
@@ -232,14 +213,6 @@ struct InfoView: View {
                                 )
                             }
                         }
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.systemBackground))
-                        .cornerRadius(16)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color(hex: "#736CED").opacity(0.15), lineWidth: 1)
-                        )
 
                         // Reset buttons
                         VStack(spacing: 12) {
