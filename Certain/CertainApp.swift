@@ -11,7 +11,22 @@ import SwiftUI
 struct CertainApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .preferredColorScheme(.light)
+        }
+    }
+}
+
+struct RootView: View {
+    @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+
+    var body: some View {
+        Group {
+            if showOnboarding {
+                OnboardingView(isPresented: $showOnboarding)
+            } else {
+                MainTabView()
+            }
         }
     }
 }
