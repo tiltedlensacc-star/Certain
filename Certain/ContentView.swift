@@ -22,6 +22,7 @@ struct ContentView: View {
     @State private var selectedTab: ItemType = .lockUnlock
     @State private var showCertainPlus = false
     @State private var showLimitReachedAlert = false
+    @State private var emptyStateOpacity: Double = 0.0
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
 
     var body: some View {
@@ -231,6 +232,7 @@ struct ContentView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 80, height: 80)
+                        .opacity(emptyStateOpacity)
 
                     VStack(spacing: 12) {
                         Text(emptyTitle)
@@ -238,7 +240,7 @@ struct ContentView: View {
                             .fontWeight(.light)
                             .italic()
                             .foregroundColor(Color(hex: "#4A4A4A"))
-                            .opacity(0.6)
+                            .opacity(0.6 * emptyStateOpacity)
                     }
 
                     Button(action: {
@@ -259,9 +261,19 @@ struct ContentView: View {
                         .foregroundColor(.white)
                         .cornerRadius(12)
                     }
+                    .opacity(emptyStateOpacity)
                     .padding(.top, 16)
                 }
                 .padding(.bottom, 80) // Account for tab bar height
+                .onAppear {
+                    // Reset and delay the fade-in so it happens after page transition
+                    emptyStateOpacity = 0.0
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        withAnimation(.easeIn(duration: 0.5)) {
+                            emptyStateOpacity = 1.0
+                        }
+                    }
+                }
                 Spacer(minLength: 0)
             } else {
                 // Item list
