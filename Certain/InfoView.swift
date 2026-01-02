@@ -191,25 +191,25 @@ struct InfoView: View {
                                 LinkButton(
                                     icon: "questionmark.circle.fill",
                                     title: "Help & Support",
-                                    url: "https://YOUR-GITHUB-USERNAME.github.io/Certain/support.html"
+                                    url: "https://tiltedlensacc-star.github.io/Certain/support.html"
                                 )
 
                                 LinkButton(
                                     icon: "envelope.fill",
                                     title: "Contact Us",
-                                    url: "https://YOUR-GITHUB-USERNAME.github.io/Certain/contact.html"
+                                    url: "https://tiltedlensacc-star.github.io/Certain/contact.html"
                                 )
 
                                 LinkButton(
                                     icon: "doc.text.fill",
                                     title: "Privacy Policy",
-                                    url: "https://YOUR-GITHUB-USERNAME.github.io/Certain/privacy-policy.html"
+                                    url: "https://tiltedlensacc-star.github.io/Certain/privacy-policy.html"
                                 )
 
                                 LinkButton(
                                     icon: "checkmark.shield.fill",
                                     title: "Terms of Use",
-                                    url: "https://YOUR-GITHUB-USERNAME.github.io/Certain/terms-of-use.html"
+                                    url: "https://tiltedlensacc-star.github.io/Certain/terms-of-use.html"
                                 )
                             }
                         }
