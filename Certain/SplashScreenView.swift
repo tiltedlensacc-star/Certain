@@ -9,44 +9,36 @@ import SwiftUI
 
 struct SplashScreenView: View {
     @Binding var isPresented: Bool
-    @State private var opacity: Double = 0.0
-    @State private var scale: CGFloat = 0.8
-    @State private var colorProgress: Double = 0.0
+    @State private var iconOpacity: Double = 0.0
+    @State private var iconScale: CGFloat = 0.85
+    @State private var gradientOpacity: Double = 0.0
 
     var body: some View {
         ZStack {
-            // Background gradient
+            // White background
+            Color.white
+                .ignoresSafeArea()
+
+            // Subtle purple gradient overlay
             LinearGradient(
                 gradient: Gradient(stops: [
-                    .init(color: Color(hex: "#ADA9F5").opacity(colorProgress), location: 0.0),
-                    .init(color: Color(hex: "#7E7CE8").opacity(colorProgress), location: 0.2),
-                    .init(color: Color(hex: "#4845B8").opacity(colorProgress), location: 0.4),
-                    .init(color: Color(hex: "#4845B8").opacity(colorProgress), location: 1.0)
+                    .init(color: Color(hex: "#EFE0F7"), location: 0.0),
+                    .init(color: Color(hex: "#FDFCFD"), location: 0.4),
+                    .init(color: Color(hex: "#F5E5D5"), location: 1.0)
                 ]),
-                startPoint: .topTrailing,
-                endPoint: .bottomLeading
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
+            .opacity(gradientOpacity)
             .ignoresSafeArea()
 
-            // App icon with animation
-            VStack(spacing: 24) {
-                Image("AboutPageIcon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 120, height: 120)
-                    .opacity(opacity)
-                    .scaleEffect(scale)
-
-                Text("Certain")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .opacity(opacity)
-
-                Text("Peace of mind in your pocket")
-                    .font(.body)
-                    .foregroundColor(.white.opacity(0.9))
-                    .opacity(opacity)
-            }
+            // App icon - centered
+            Image("AboutPageIcon")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 140, height: 140)
+                .opacity(iconOpacity)
+                .scaleEffect(iconScale)
         }
         .onAppear {
             startAnimation()
@@ -54,20 +46,20 @@ struct SplashScreenView: View {
     }
 
     private func startAnimation() {
-        // First phase: Fade in icon and scale
-        withAnimation(.easeOut(duration: 0.8)) {
-            opacity = 1.0
-            scale = 1.0
+        // Phase 1: Fade in and scale the icon
+        withAnimation(.easeOut(duration: 1.2)) {
+            iconOpacity = 1.0
+            iconScale = 1.0
         }
 
-        // Second phase: Add purple color
-        withAnimation(.easeIn(duration: 0.8).delay(0.5)) {
-            colorProgress = 1.0
+        // Phase 2: Subtle gradient fade in
+        withAnimation(.easeIn(duration: 1.5).delay(0.8)) {
+            gradientOpacity = 0.6
         }
 
-        // Dismiss after animation completes
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-            withAnimation(.easeOut(duration: 0.5)) {
+        // Dismiss after longer duration
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+            withAnimation(.easeInOut(duration: 0.6)) {
                 markSplashAsShown()
                 isPresented = false
             }
