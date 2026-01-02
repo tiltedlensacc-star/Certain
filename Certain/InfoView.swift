@@ -294,6 +294,7 @@ struct InfoView: View {
 
     private func resetSplashScreen() {
         UserDefaults.standard.set(false, forKey: "hasSeenSplashScreen")
+        UserDefaults.standard.set(false, forKey: "hasAnimatedEmptyState")
         // Show an alert to inform the user
         if let window = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
@@ -310,6 +311,7 @@ struct InfoView: View {
 
     private func resetOnboarding() {
         UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.set(false, forKey: "hasAnimatedEmptyState")
         // Need to restart the app to see the onboarding
         // Show an alert to inform the user
         if let window = UIApplication.shared.connectedScenes

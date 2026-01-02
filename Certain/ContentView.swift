@@ -22,7 +22,8 @@ struct ContentView: View {
     @State private var selectedTab: ItemType = .lockUnlock
     @State private var showCertainPlus = false
     @State private var showLimitReachedAlert = false
-    @State private var emptyStateOpacity: Double = 0.0
+    @State private var emptyStateOpacity: Double = 1.0
+    @State private var hasAnimatedEmptyState = UserDefaults.standard.bool(forKey: "hasAnimatedEmptyState")
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
 
     var body: some View {
@@ -266,12 +267,18 @@ struct ContentView: View {
                 }
                 .padding(.bottom, 80) // Account for tab bar height
                 .onAppear {
-                    // Reset and delay the fade-in so it happens after page transition
-                    emptyStateOpacity = 0.0
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        withAnimation(.easeIn(duration: 0.5)) {
-                            emptyStateOpacity = 1.0
+                    // Only animate on first appearance after onboarding
+                    if !hasAnimatedEmptyState {
+                        emptyStateOpacity = 0.0
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            withAnimation(.easeIn(duration: 0.5)) {
+                                emptyStateOpacity = 1.0
+                            }
                         }
+                        hasAnimatedEmptyState = true
+                        UserDefaults.standard.set(true, forKey: "hasAnimatedEmptyState")
+                    } else {
+                        emptyStateOpacity = 1.0
                     }
                 }
                 Spacer(minLength: 0)
