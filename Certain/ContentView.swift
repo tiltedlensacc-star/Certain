@@ -24,6 +24,9 @@ struct ContentView: View {
     @State private var showLimitReachedAlert = false
     @State private var emptyStateOpacity: Double = 1.0
     @State private var hasAnimatedEmptyState = UserDefaults.standard.bool(forKey: "hasAnimatedEmptyState")
+    @State private var showNotification = false
+    @State private var notificationMessage = ""
+    @State private var notificationIcon = ""
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
 
     var body: some View {
@@ -96,10 +99,36 @@ struct ContentView: View {
                         }
                     }
                 }
+
+                // Notification banner
+                if showNotification {
+                    VStack {
+                        HStack(spacing: 12) {
+                            Image(systemName: notificationIcon)
+                                .foregroundColor(.white)
+                                .font(.body)
+
+                            Text(notificationMessage)
+                                .font(.subheadline)
+                                .foregroundColor(.white)
+                                .fontWeight(.medium)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color(hex: "#736CED"))
+                        .cornerRadius(12)
+                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                        .padding(.top, 60)
+
+                        Spacer()
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
             .sheet(isPresented: $showAddItem) {
                 AddItemView(onItemSaved: { itemType in
                     selectedTab = itemType
+                    showNotificationBanner(message: "Item added", icon: "checkmark.circle.fill")
                 })
             }
             .sheet(item: $confirmationItem) { item in
@@ -119,6 +148,7 @@ struct ContentView: View {
                 Button("Delete", role: .destructive) {
                     if let item = itemToDelete {
                         persistenceManager.deleteItem(item)
+                        showNotificationBanner(message: "Item deleted", icon: "trash.fill")
                     }
                 }
             } message: {
@@ -217,6 +247,20 @@ struct ContentView: View {
 
     private func handleUnconfirm(_ item: SafetyItem) {
         let _ = persistenceManager.unconfirmItem(item)
+    }
+
+    private func showNotificationBanner(message: String, icon: String) {
+        notificationMessage = message
+        notificationIcon = icon
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            showNotification = true
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            withAnimation(.easeOut(duration: 0.3)) {
+                showNotification = false
+            }
+        }
     }
 
     @ViewBuilder
