@@ -242,39 +242,6 @@ struct InfoView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                        // Reset buttons
-                        VStack(spacing: 12) {
-                            Button(action: {
-                                resetSplashScreen()
-                            }) {
-                                HStack {
-                                    Image(systemName: "sparkles")
-                                    Text("Show Splash Animation Again")
-                                }
-                                .font(.subheadline)
-                                .foregroundColor(Color(hex: "#736CED"))
-                                .padding(.vertical, 12)
-                                .frame(maxWidth: .infinity)
-                                .background(Color(hex: "#736CED").opacity(0.1))
-                                .cornerRadius(10)
-                            }
-
-                            Button(action: {
-                                resetOnboarding()
-                            }) {
-                                HStack {
-                                    Image(systemName: "arrow.counterclockwise")
-                                    Text("Show Onboarding Again")
-                                }
-                                .font(.subheadline)
-                                .foregroundColor(Color(hex: "#736CED"))
-                                .padding(.vertical, 12)
-                                .frame(maxWidth: .infinity)
-                                .background(Color(hex: "#736CED").opacity(0.1))
-                                .cornerRadius(10)
-                            }
-                        }
-
                         // Version info
                         Text("Version 1.0")
                             .font(.caption)
@@ -305,41 +272,6 @@ struct InfoView: View {
 
         restoreMessage = subscriptionManager.isPremium ? "Your subscription has been restored!" : "No previous purchases found."
         showRestoreAlert = true
-    }
-
-    private func resetSplashScreen() {
-        UserDefaults.standard.set(false, forKey: "hasSeenSplashScreen")
-        UserDefaults.standard.set(false, forKey: "hasAnimatedEmptyState")
-        // Show an alert to inform the user
-        if let window = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first?.windows.first {
-            let alert = UIAlertController(
-                title: "Splash Screen Reset",
-                message: "Close and reopen the app to see the splash animation again.",
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            window.rootViewController?.present(alert, animated: true)
-        }
-    }
-
-    private func resetOnboarding() {
-        UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
-        UserDefaults.standard.set(false, forKey: "hasAnimatedEmptyState")
-        // Need to restart the app to see the onboarding
-        // Show an alert to inform the user
-        if let window = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first?.windows.first {
-            let alert = UIAlertController(
-                title: "Onboarding Reset",
-                message: "Close and reopen the app to see the onboarding again.",
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            window.rootViewController?.present(alert, animated: true)
-        }
     }
 
     private var headerView: some View {
