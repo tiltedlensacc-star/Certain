@@ -6,11 +6,17 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct CertainPlusView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @State private var selectedPlan: SubscriptionPlan = .monthly
+    @State private var isPurchasing = false
+    @State private var isRestoring = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    @State private var showRestoreSuccess = false
 
     enum SubscriptionPlan {
         case monthly
@@ -119,51 +125,170 @@ struct CertainPlusView: View {
 
                         // Subscribe button
                         Button(action: {
-                            handlePurchase()
+                            Task {
+                                await handlePurchase()
+                            }
                         }) {
-                            Text("Unlock Ultimate Peace of Mind")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color(hex: "#736CED"))
-                                .cornerRadius(12)
+                            HStack {
+                                if isPurchasing {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.9)
+                                    Text("Processing...")
+                                        .font(.headline)
+                                        .fontWeight(.semibold)
+                                } else {
+                                    Text("Unlock Ultimate Peace of Mind")
+                                        .font(.headline)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(isPurchasing ? Color(hex: "#736CED").opacity(0.7) : Color(hex: "#736CED"))
+                            .cornerRadius(12)
                         }
+                        .disabled(isPurchasing)
                         .padding(.horizontal, 24)
 
-                        // Restore purchases
+                        // Restore purchases - prominent button as required by Apple
                         Button(action: {
-                            subscriptionManager.restorePurchases()
+                            Task {
+                                await handleRestore()
+                            }
                         }) {
-                            Text("Restore Purchases")
-                                .font(.subheadline)
-                                .foregroundColor(Color(hex: "#736CED"))
+                            HStack {
+                                if isRestoring {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "#736CED")))
+                                        .scaleEffect(0.8)
+                                }
+                                Text(isRestoring ? "Restoring..." : "Restore Purchases")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(Color(hex: "#736CED"))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color(hex: "#736CED").opacity(0.1))
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color(hex: "#736CED"), lineWidth: 1.5)
+                            )
                         }
-                        .padding(.top, 8)
+                        .disabled(isRestoring || isPurchasing)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 12)
 
-                        // Terms
-                        Text("Subscription auto-renews. Cancel anytime.")
-                            .font(.caption)
-                            .foregroundColor(Color(hex: "#4A4A4A"))
-                            .opacity(0.6)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                            .padding(.bottom, 40)
+                        // Subscription Terms
+                        VStack(spacing: 12) {
+                            Text("Certain Plus is an auto-renewable subscription. Your subscription will automatically renew at the end of each billing period unless cancelled at least 24 hours before the renewal date.")
+                                .font(.caption)
+                                .foregroundColor(Color(hex: "#4A4A4A"))
+                                .opacity(0.7)
+                                .multilineTextAlignment(.center)
+
+                            Text("Cancel anytime in your App Store account settings.")
+                                .font(.caption)
+                                .foregroundColor(Color(hex: "#4A4A4A"))
+                                .opacity(0.7)
+                                .multilineTextAlignment(.center)
+
+                            // Legal links
+                            HStack(spacing: 8) {
+                                Button(action: {
+                                    if let url = URL(string: "https://tiltedlensacc-star.github.io/Certain/privacy-policy.html") {
+                                        UIApplication.shared.open(url)
+                                    }
+                                }) {
+                                    Text("Privacy Policy")
+                                        .font(.caption)
+                                        .foregroundColor(Color(hex: "#736CED"))
+                                        .underline()
+                                }
+
+                                Text("•")
+                                    .font(.caption)
+                                    .foregroundColor(Color(hex: "#4A4A4A"))
+                                    .opacity(0.5)
+
+                                Button(action: {
+                                    if let url = URL(string: "https://tiltedlensacc-star.github.io/Certain/terms-of-use.html") {
+                                        UIApplication.shared.open(url)
+                                    }
+                                }) {
+                                    Text("Terms of Use")
+                                        .font(.caption)
+                                        .foregroundColor(Color(hex: "#736CED"))
+                                        .underline()
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 40)
                     }
                 }
             }
         }
+        .alert("Purchase Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
+        .alert("Restore Successful", isPresented: $showRestoreSuccess) {
+            Button("OK", role: .cancel) {
+                if subscriptionManager.isPremium {
+                    dismiss()
+                }
+            }
+        } message: {
+            Text(subscriptionManager.isPremium ? "Your subscription has been restored!" : "No previous purchases found.")
+        }
     }
 
-    private func handlePurchase() {
-        switch selectedPlan {
-        case .monthly:
-            subscriptionManager.purchaseMonthly()
-        case .yearly:
-            subscriptionManager.purchaseYearly()
+    private func handlePurchase() async {
+        isPurchasing = true
+
+        do {
+            let product: Product?
+            switch selectedPlan {
+            case .monthly:
+                product = subscriptionManager.products.first(where: { $0.id == SubscriptionProduct.monthly.rawValue })
+            case .yearly:
+                product = subscriptionManager.products.first(where: { $0.id == SubscriptionProduct.yearly.rawValue })
+            }
+
+            guard let product = product else {
+                errorMessage = "Product not available. Please try again later."
+                showError = true
+                isPurchasing = false
+                return
+            }
+
+            let transaction = try await subscriptionManager.purchase(product)
+
+            isPurchasing = false
+
+            // Only dismiss if purchase was successful
+            if transaction != nil {
+                dismiss()
+            }
+        } catch {
+            isPurchasing = false
+            errorMessage = "Purchase failed. Please try again."
+            showError = true
         }
-        dismiss()
+    }
+
+    private func handleRestore() async {
+        isRestoring = true
+
+        await subscriptionManager.restorePurchases()
+
+        isRestoring = false
+        showRestoreSuccess = true
     }
 }
 

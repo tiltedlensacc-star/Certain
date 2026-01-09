@@ -10,6 +10,9 @@ import SwiftUI
 struct InfoView: View {
     @State private var showCertainPlus = false
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @State private var isRestoring = false
+    @State private var showRestoreAlert = false
+    @State private var restoreMessage = ""
 
     var body: some View {
         ZStack {
@@ -62,7 +65,7 @@ struct InfoView: View {
                                 .font(.body)
                                 .foregroundColor(Color(hex: "#4A4A4A"))
 
-                            Text("You can record actions like locking doors and windows or turning off appliances with date + timestamps and photos for peace of mind.")
+                            Text("You can record actions like locking doors and windows or switching off lights, gas hobs, and appliances with date + timestamps and photos for peace of mind.")
                                 .font(.body)
                                 .foregroundColor(Color(hex: "#4A4A4A"))
 
@@ -79,13 +82,13 @@ struct InfoView: View {
                             FeatureStep(
                                 number: "1",
                                 title: "Create Items",
-                                description: "Add the things you want to record - doors, appliances, windows, etc."
+                                description: "Add the things you want to record - doors, lights, gas hobs, appliances, windows, etc."
                             )
 
                             FeatureStep(
                                 number: "2",
                                 title: "Confirm Actions",
-                                description: "When you lock or turn off each item, log that action in this app and record it with an optional photo."
+                                description: "When you lock or switch off each item, log that action in this app and record it with an optional photo."
                             )
 
                             FeatureStep(
@@ -93,6 +96,13 @@ struct InfoView: View {
                                 title: "Find Reassurance",
                                 description: "Review your logged confirmations anytime to ease your mind."
                             )
+
+                            Text("Certain is a logging tool and does not physically lock or control any items.")
+                                .font(.caption)
+                                .foregroundColor(Color(hex: "#4A4A4A"))
+                                .opacity(0.5)
+                                .multilineTextAlignment(.leading)
+                                .padding(.top, 8)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -134,6 +144,29 @@ struct InfoView: View {
                                         .background(Color(hex: "#736CED"))
                                         .cornerRadius(12)
                                 }
+
+                                // Restore Purchases button
+                                Button(action: {
+                                    Task {
+                                        await handleRestore()
+                                    }
+                                }) {
+                                    HStack {
+                                        if isRestoring {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "#736CED")))
+                                                .scaleEffect(0.8)
+                                        }
+                                        Text(isRestoring ? "Restoring..." : "Restore Purchases")
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                    }
+                                    .foregroundColor(Color(hex: "#736CED"))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                }
+                                .disabled(isRestoring)
+                                .padding(.top, 8)
                             } else {
                                 Divider()
 
@@ -159,25 +192,6 @@ struct InfoView: View {
                                 .stroke(Color(hex: "#736CED").opacity(0.15), lineWidth: 1)
                         )
                         .padding(.vertical, 8)
-
-                        // Privacy section
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack {
-                                Image(systemName: "lock.shield.fill")
-                                    .foregroundColor(Color(hex: "#736CED"))
-                                Text("Your Privacy Matters")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                            }
-
-                            Text("All your data stays on your device. No cloud storage, no tracking, no accounts required. Your confirmations are yours alone.")
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(hex: "#736CED").opacity(0.1))
-                        .cornerRadius(12)
 
                         // Legal & Support links
                         VStack(spacing: 16) {
@@ -213,6 +227,22 @@ struct InfoView: View {
                                 )
                             }
                         }
+
+                        // Privacy section
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack {
+                                Image(systemName: "lock.shield.fill")
+                                    .foregroundColor(Color(hex: "#736CED"))
+                                Text("Your Privacy Matters")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                            }
+
+                            Text("All your data stays on your device. No cloud storage, no tracking, no accounts required. Your confirmations are yours alone.")
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
                         // Reset buttons
                         VStack(spacing: 12) {
@@ -263,6 +293,20 @@ struct InfoView: View {
         .sheet(isPresented: $showCertainPlus) {
             CertainPlusView()
         }
+        .alert("Restore Purchases", isPresented: $showRestoreAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(restoreMessage)
+        }
+    }
+
+    private func handleRestore() async {
+        isRestoring = true
+        await subscriptionManager.restorePurchases()
+        isRestoring = false
+
+        restoreMessage = subscriptionManager.isPremium ? "Your subscription has been restored!" : "No previous purchases found."
+        showRestoreAlert = true
     }
 
     private func resetSplashScreen() {
