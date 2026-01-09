@@ -6,12 +6,17 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct OnboardingView: View {
     @Binding var isPresented: Bool
     @State private var currentPage = 0
     @State private var selectedPlan: SubscriptionPlan = .yearly
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @State private var isPurchasing = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    @State private var showSuccessNotification = false
 
     enum SubscriptionPlan {
         case monthly
@@ -79,23 +84,66 @@ struct OnboardingView: View {
                         }
                     } else {
                         Button(action: {
-                            handleContinue()
+                            Task {
+                                await handleContinue()
+                            }
                         }) {
-                            Text("Continue")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color(hex: "#736CED"))
-                                .cornerRadius(12)
+                            HStack {
+                                if isPurchasing {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.9)
+                                    Text("Processing...")
+                                        .font(.headline)
+                                        .fontWeight(.semibold)
+                                } else {
+                                    Text("Continue")
+                                        .font(.headline)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(isPurchasing ? Color(hex: "#736CED").opacity(0.7) : Color(hex: "#736CED"))
+                            .cornerRadius(12)
                         }
+                        .disabled(isPurchasing)
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: currentPage)
                 .padding()
                 .padding(.bottom, 8)
             }
+
+            // Success notification overlay
+            if showSuccessNotification {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.title2)
+                        Text("Subscription activated!")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(UIColor.systemBackground))
+                            .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                    )
+                    .padding(.bottom, 100)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .animation(.spring(), value: showSuccessNotification)
+            }
+        }
+        .alert("Purchase Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
         }
     }
 
@@ -104,25 +152,49 @@ struct OnboardingView: View {
         isPresented = false
     }
 
-    private func handlePurchase() {
-        switch selectedPlan {
-        case .monthly:
-            subscriptionManager.purchaseMonthly()
-        case .yearly:
-            subscriptionManager.purchaseYearly()
-        case .free:
-            break
-        }
-    }
-
-    private func handleContinue() {
-        switch selectedPlan {
-        case .monthly:
-            subscriptionManager.purchaseMonthly()
-        case .yearly:
-            subscriptionManager.purchaseYearly()
-        case .free:
+    private func handleContinue() async {
+        if selectedPlan == .free {
             completeOnboarding()
+            return
+        }
+
+        isPurchasing = true
+
+        do {
+            let product: Product?
+            switch selectedPlan {
+            case .monthly:
+                product = subscriptionManager.products.first(where: { $0.id == SubscriptionProduct.monthly.rawValue })
+            case .yearly:
+                product = subscriptionManager.products.first(where: { $0.id == SubscriptionProduct.yearly.rawValue })
+            case .free:
+                product = nil
+            }
+
+            guard let product = product else {
+                errorMessage = "Product not available. Please try again later."
+                showError = true
+                isPurchasing = false
+                return
+            }
+
+            let transaction = try await subscriptionManager.purchase(product)
+
+            isPurchasing = false
+
+            // If purchase was successful, show success notification and complete onboarding
+            if transaction != nil {
+                showSuccessNotification = true
+
+                // Wait a moment for the notification to be visible
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+
+                completeOnboarding()
+            }
+        } catch {
+            isPurchasing = false
+            errorMessage = "Purchase failed. Please try again."
+            showError = true
         }
     }
 }
