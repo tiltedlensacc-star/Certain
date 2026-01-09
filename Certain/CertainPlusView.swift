@@ -152,13 +152,13 @@ struct CertainPlusView: View {
                         .disabled(isPurchasing)
                         .padding(.horizontal, 24)
 
-                        // Restore purchases - prominent button as required by Apple
+                        // Restore purchases
                         Button(action: {
                             Task {
                                 await handleRestore()
                             }
                         }) {
-                            HStack {
+                            HStack(spacing: 6) {
                                 if isRestoring {
                                     ProgressView()
                                         .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "#736CED")))
@@ -166,20 +166,11 @@ struct CertainPlusView: View {
                                 }
                                 Text(isRestoring ? "Restoring..." : "Restore Purchases")
                                     .font(.subheadline)
-                                    .fontWeight(.semibold)
+                                    .fontWeight(.medium)
                             }
                             .foregroundColor(Color(hex: "#736CED"))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color(hex: "#736CED").opacity(0.1))
-                            .cornerRadius(10)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color(hex: "#736CED"), lineWidth: 1.5)
-                            )
                         }
                         .disabled(isRestoring || isPurchasing)
-                        .padding(.horizontal, 24)
                         .padding(.top, 12)
 
                         // Subscription Terms

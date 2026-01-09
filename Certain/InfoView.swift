@@ -151,7 +151,7 @@ struct InfoView: View {
                                         await handleRestore()
                                     }
                                 }) {
-                                    HStack {
+                                    HStack(spacing: 6) {
                                         if isRestoring {
                                             ProgressView()
                                                 .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "#736CED")))
@@ -162,8 +162,6 @@ struct InfoView: View {
                                             .fontWeight(.medium)
                                     }
                                     .foregroundColor(Color(hex: "#736CED"))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
                                 }
                                 .disabled(isRestoring)
                                 .padding(.top, 8)
