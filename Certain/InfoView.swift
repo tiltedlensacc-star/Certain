@@ -162,6 +162,7 @@ struct InfoView: View {
                                             .fontWeight(.medium)
                                     }
                                     .foregroundColor(Color(hex: "#736CED"))
+                                    .frame(maxWidth: .infinity)
                                 }
                                 .disabled(isRestoring)
                                 .padding(.top, 8)
