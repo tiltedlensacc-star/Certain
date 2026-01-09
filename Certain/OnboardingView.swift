@@ -202,13 +202,13 @@ struct OnboardingPage2: View {
                 OnboardingStep(
                     number: "1",
                     title: "Create Items",
-                    description: "Add the things you want to record - doors, appliances, windows, etc."
+                    description: "Add the things you want to record - doors, lights, gas hobs, appliances, windows, etc."
                 )
 
                 OnboardingStep(
                     number: "2",
                     title: "Confirm Actions",
-                    description: "When you lock or turn off each item, log that action in this app and record it with an optional photo."
+                    description: "When you lock or switch off each item, log that action in this app and record it with an optional photo."
                 )
 
                 OnboardingStep(
@@ -216,6 +216,13 @@ struct OnboardingPage2: View {
                     title: "Find Reassurance",
                     description: "Review your logged confirmations anytime to ease your mind."
                 )
+
+                Text("Certain is a logging tool and does not physically lock or control any items.")
+                    .font(.caption)
+                    .foregroundColor(Color(hex: "#4A4A4A"))
+                    .opacity(0.5)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 8)
             }
             .padding(.horizontal, 24)
 
@@ -316,6 +323,37 @@ struct OnboardingPage3: View {
                 .buttonStyle(PlainButtonStyle())
             }
             .padding(.horizontal, 24)
+
+            // Legal links
+            HStack(spacing: 8) {
+                Button(action: {
+                    if let url = URL(string: "https://tiltedlensacc-star.github.io/Certain/privacy-policy.html") {
+                        UIApplication.shared.open(url)
+                    }
+                }) {
+                    Text("Privacy Policy")
+                        .font(.caption)
+                        .foregroundColor(Color(hex: "#736CED"))
+                        .underline()
+                }
+
+                Text("•")
+                    .font(.caption)
+                    .foregroundColor(Color(hex: "#4A4A4A"))
+                    .opacity(0.5)
+
+                Button(action: {
+                    if let url = URL(string: "https://tiltedlensacc-star.github.io/Certain/terms-of-use.html") {
+                        UIApplication.shared.open(url)
+                    }
+                }) {
+                    Text("Terms of Use")
+                        .font(.caption)
+                        .foregroundColor(Color(hex: "#736CED"))
+                        .underline()
+                }
+            }
+            .padding(.top, 12)
 
             Spacer()
         }
