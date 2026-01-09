@@ -23,12 +23,7 @@ enum ItemType: String, Codable, CaseIterable {
     }
 
     var unconfirmActionTitle: String {
-        switch self {
-        case .lockUnlock:
-            return "Unlock"
-        case .onOff:
-            return "Turn On"
-        }
+        return "Reset"
     }
 
     var confirmedIcon: String {

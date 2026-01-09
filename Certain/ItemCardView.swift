@@ -54,7 +54,7 @@ struct ItemCardView: View {
                     }
 
                     if item.state == .confirmed {
-                        Text(item.type == .lockUnlock ? "Locked" : "Turned Off")
+                        Text(item.type == .lockUnlock ? "Locked" : "Switched Off")
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundColor(item.state.color)
@@ -93,7 +93,7 @@ struct ItemCardView: View {
                     .font(.caption)
                     .foregroundColor(item.state == .confirmed ? .primary.opacity(0.85) : .secondary)
                 if item.state == .confirmed {
-                    let messageText = item.type == .lockUnlock ? "You locked this item on" : "You turned this item off on"
+                    let messageText = item.type == .lockUnlock ? "You locked this item on" : "You switched this item off on"
                     Text("\(messageText) \(item.formattedLastConfirmedDate)")
                         .font(.caption)
                         .foregroundColor(.primary.opacity(0.85))
@@ -111,25 +111,25 @@ struct ItemCardView: View {
                 // Primary action button
                 Button(action: {
                     if item.state == .confirmed {
-                        onUnconfirm?()
+                        onReassure()
                     } else {
                         onConfirm()
                     }
                 }) {
-                    Text(item.actionButtonTitle)
+                    Text(item.state == .confirmed ? "Reassure Me" : item.actionButtonTitle)
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(item.state == .confirmed ? Color(hex: "#736CED").opacity(0.1) : Color(hex: "#736CED"))
-                        .foregroundColor(item.state == .confirmed ? Color(hex: "#736CED") : .white)
+                        .background(Color(hex: "#736CED"))
+                        .foregroundColor(.white)
                         .cornerRadius(10)
                 }
 
                 HStack(spacing: 10) {
-                    // Reassure Me button (only if confirmed)
+                    // Reset button (only if confirmed)
                     if item.state == .confirmed {
-                        Button(action: onReassure) {
-                            Text("Reassure Me")
+                        Button(action: { onUnconfirm?() }) {
+                            Text("Reset")
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                                 .frame(maxWidth: .infinity)

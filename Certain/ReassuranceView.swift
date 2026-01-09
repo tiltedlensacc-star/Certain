@@ -104,7 +104,7 @@ struct ReassuranceView: View {
                         .foregroundColor(Color(hex: "#40AD7C"))
                         .multilineTextAlignment(.center)
 
-                    let actionText = item.type == .lockUnlock ? "locked this." : "turned this off."
+                    let actionText = item.type == .lockUnlock ? "locked this." : "switched this off."
                     Text("You \(actionText)")
                         .font(.title2)
                         .fontWeight(.bold)
@@ -135,7 +135,7 @@ struct ReassuranceView: View {
 
                     // Timestamp
                     VStack(spacing: 4) {
-                        let messageText = item.type == .lockUnlock ? "You confirmed this as locked at:" : "You confirmed this as turned off at:"
+                        let messageText = item.type == .lockUnlock ? "You confirmed this as locked at:" : "You confirmed this as switched off at:"
                         Text(messageText)
                             .font(.subheadline)
                             .fontWeight(.medium)

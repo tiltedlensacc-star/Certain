@@ -69,7 +69,7 @@ struct ConfirmationView: View {
                                 .foregroundColor(.secondary)
                         }
                     } else {
-                        let statusText = item.type == .lockUnlock ? "locked" : "turned off"
+                        let statusText = item.type == .lockUnlock ? "locked" : "switched off"
                         Text("Are you ready to mark this item as \(statusText)?")
                             .font(.subheadline)
                             .fontWeight(.bold)

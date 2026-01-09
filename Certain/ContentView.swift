@@ -127,7 +127,7 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showAddItem) {
-                AddItemView(onItemSaved: { itemType in
+                AddItemView(defaultType: selectedTab, onItemSaved: { itemType in
                     selectedTab = itemType
                     showNotificationBanner(message: "Item added", icon: "checkmark.circle.fill", color: Color(red: 0.3, green: 0.7, blue: 0.4))
                 })
@@ -155,15 +155,15 @@ struct ContentView: View {
             } message: {
                 Text("Are you sure you want to delete this item? This cannot be undone.")
             }
-            .alert("Unlock Item", isPresented: $showUnlockAlert) {
+            .alert("Reset Item", isPresented: $showUnlockAlert) {
                 Button("Cancel", role: .cancel) { }
-                Button("Unlock", role: .destructive) {
+                Button("Reset", role: .destructive) {
                     if let item = itemToUnlock {
                         handleUnconfirm(item)
                     }
                 }
             } message: {
-                Text("Are you sure you want to unlock this item? This will reset it to unconfirmed status.")
+                Text("Are you sure you want to reset this item? This will reset it to unconfirmed status.")
             }
             .sheet(isPresented: $showCertainPlus) {
                 CertainPlusView()
@@ -268,7 +268,7 @@ struct ContentView: View {
     @ViewBuilder
     private func tabContentView(for type: ItemType) -> some View {
         let items = persistenceManager.items.filter { $0.type == type }
-        let emptyTitle = persistenceManager.items.isEmpty ? "No items yet" : (type == .lockUnlock ? "No items to lock yet" : "No items to turn off yet")
+        let emptyTitle = persistenceManager.items.isEmpty ? "No items yet" : (type == .lockUnlock ? "No items to lock yet" : "No items to switch off yet")
 
         VStack(spacing: 0) {
             if items.isEmpty {

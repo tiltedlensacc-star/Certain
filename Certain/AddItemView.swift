@@ -14,6 +14,7 @@ struct AddItemView: View {
 
     var editingItem: SafetyItem?
     var onItemSaved: ((ItemType) -> Void)?
+    var defaultType: ItemType?
 
     @State private var name: String = ""
     @State private var selectedRoom: String = Room.common[0]
@@ -22,8 +23,9 @@ struct AddItemView: View {
     @State private var itemDescription: String = ""
     @State private var selectedType: ItemType = .lockUnlock
 
-    init(editingItem: SafetyItem? = nil, onItemSaved: ((ItemType) -> Void)? = nil) {
+    init(editingItem: SafetyItem? = nil, defaultType: ItemType? = nil, onItemSaved: ((ItemType) -> Void)? = nil) {
         self.editingItem = editingItem
+        self.defaultType = defaultType
         self.onItemSaved = onItemSaved
 
         if let item = editingItem {
@@ -38,6 +40,9 @@ struct AddItemView: View {
                 _customRoom = State(initialValue: item.room)
                 _selectedRoom = State(initialValue: "Other")
             }
+        } else if let type = defaultType {
+            // For new items, use the provided default type
+            _selectedType = State(initialValue: type)
         }
     }
 
@@ -62,7 +67,7 @@ struct AddItemView: View {
 
                         (Text("• ").font(.caption).foregroundColor(.secondary) +
                          Text("On/Off").font(.caption).fontWeight(.bold).foregroundColor(.secondary) +
-                         Text(": For lights, appliances, or electrical devices").font(.caption).foregroundColor(.secondary))
+                         Text(": For lights, gas hobs, appliances, or electrical devices").font(.caption).foregroundColor(.secondary))
                     }
                     .padding(.vertical, 4)
 
@@ -96,7 +101,7 @@ struct AddItemView: View {
 
                 if editingItem == nil {
                     Section {
-                        Text("New items start unconfirmed. You'll need to confirm each item by locking or turning them off.")
+                        Text("New items start unconfirmed. You'll need to confirm each item by locking or switching them off.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
