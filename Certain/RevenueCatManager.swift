@@ -22,6 +22,7 @@ class RevenueCatManager: NSObject, ObservableObject {
     let freeItemLimit = 5
     private let apiKey = "test_VFcPHQInZhFydKjJoqyULfPWFZM"
     private let entitlementIdentifier = "Certain Plus"
+    private let offeringIdentifier = "ofrngc82acdea03"
 
     // MARK: - Debug Settings
     // Set this to true to bypass purchases and test premium features
@@ -118,7 +119,18 @@ class RevenueCatManager: NSObject, ObservableObject {
     /// Get current offerings
     func getCurrentOffering() async throws -> Offering? {
         let offerings = try await Purchases.shared.offerings()
-        return offerings.current
+
+        // Try to get the current offering first
+        if let currentOffering = offerings.current {
+            return currentOffering
+        }
+
+        // Fallback to specific offering ID if current is not set
+        if let specificOffering = offerings.offering(identifier: offeringIdentifier) {
+            return specificOffering
+        }
+
+        return nil
     }
 
     // MARK: - Item Limit

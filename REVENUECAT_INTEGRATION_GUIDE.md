@@ -41,24 +41,30 @@ This guide explains the complete RevenueCat integration for the Certain app.
    - Add both product IDs from App Store Connect
 5. Create an Offering:
    - Name: "Default"
+   - Offering ID: **ofrngc82acdea03** (already configured)
    - Add packages:
      - **Monthly**: monthly subscription
      - **Yearly**: yearly subscription (mark as default)
+   - Mark this offering as "Current" in the dashboard
 6. Create an Entitlement:
    - Name: **"Certain Plus"**
    - Attach both products to this entitlement
 
-## Step 3: Update API Key (if using production)
+## Step 3: Configured Constants
 
-The test API key is already configured in `RevenueCatManager.swift`:
+The following constants are already configured in `RevenueCatManager.swift`:
+
 ```swift
 private let apiKey = "test_VFcPHQInZhFydKjJoqyULfPWFZM"
+private let entitlementIdentifier = "Certain Plus"
+private let offeringIdentifier = "ofrngc82acdea03"
 ```
 
 **For production:**
 1. Get your production API key from RevenueCat Dashboard
 2. Replace the test key in `RevenueCatManager.swift`
 3. Set log level to `.info` or `.error` instead of `.debug`
+4. Verify the offering ID matches your production offering in RevenueCat Dashboard
 
 ## Step 4: Configure Paywall (Optional Customization)
 
