@@ -290,6 +290,10 @@ struct OnboardingPage3: View {
     @Binding var selectedPlan: OnboardingView.SubscriptionPlan
     @State private var packages: [Package] = []
     @State private var isLoading = true
+    @State private var isRestoring = false
+    @State private var showRestoreSuccess = false
+    @State private var showRestoreError = false
+    @State private var restoreErrorMessage = ""
 
     var body: some View {
         VStack(spacing: 24) {
@@ -401,6 +405,35 @@ struct OnboardingPage3: View {
                     )
                 }
                 .buttonStyle(PlainButtonStyle())
+
+                // Restore Purchases button
+                Button(action: {
+                    Task {
+                        await handleRestorePurchases()
+                    }
+                }) {
+                    HStack {
+                        if isRestoring {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "#736CED")))
+                                .scaleEffect(0.8)
+                        }
+                        Text(isRestoring ? "Restoring..." : "Restore Purchases")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(Color(hex: "#736CED"))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color(hex: "#736CED"), lineWidth: 1.5)
+                    )
+                }
+                .disabled(isRestoring)
+                .padding(.top, 8)
             }
             .padding(.horizontal, 24)
 
@@ -440,6 +473,16 @@ struct OnboardingPage3: View {
         .task {
             await loadOfferings()
         }
+        .alert("Restore Successful", isPresented: $showRestoreSuccess) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Your purchases have been restored successfully!")
+        }
+        .alert("Restore Failed", isPresented: $showRestoreError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(restoreErrorMessage)
+        }
     }
 
     private func loadOfferings() async {
@@ -451,6 +494,27 @@ struct OnboardingPage3: View {
         } catch {
             print("Failed to load offerings: \(error)")
             isLoading = false
+        }
+    }
+
+    private func handleRestorePurchases() async {
+        isRestoring = true
+
+        do {
+            _ = try await RevenueCatManager.shared.restorePurchases()
+
+            isRestoring = false
+
+            if RevenueCatManager.shared.isPremium {
+                showRestoreSuccess = true
+            } else {
+                restoreErrorMessage = "No previous purchases found."
+                showRestoreError = true
+            }
+        } catch {
+            isRestoring = false
+            restoreErrorMessage = "Failed to restore purchases. Please try again."
+            showRestoreError = true
         }
     }
 }
