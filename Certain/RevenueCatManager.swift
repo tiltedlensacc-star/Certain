@@ -20,7 +20,7 @@ class RevenueCatManager: NSObject, ObservableObject {
 
     // MARK: - Constants
     let freeItemLimit = 5
-    private let apiKey = "test_VFcPHQInZhFydKjJoqyULfPWFZM"
+    private let apiKey = "appl_RaqKzfhiwiyEKofpsiLnvIzQoJH"
     private let entitlementIdentifier = "Certain Plus"
     private let offeringIdentifier = "ofrngc82acdea03"
 
@@ -38,7 +38,7 @@ class RevenueCatManager: NSObject, ObservableObject {
     // MARK: - Configuration
     /// Configure RevenueCat on app launch
     func configure() {
-        Purchases.logLevel = .debug // Set to .info or .error in production
+        Purchases.logLevel = .info // Production log level
         Purchases.configure(withAPIKey: apiKey)
 
         // Set up delegate
