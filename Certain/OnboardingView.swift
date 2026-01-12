@@ -336,7 +336,7 @@ struct OnboardingPage3: View {
                     OnboardingPlanButton(
                         title: "Annual",
                         price: yearlyPackage.localizedPriceString,
-                        savings: "Save £4.89",
+                        savings: "Save 41%",
                         isSelected: selectedPlan == .yearly,
                         action: { selectedPlan = .yearly }
                     )
@@ -344,7 +344,7 @@ struct OnboardingPage3: View {
                     OnboardingPlanButton(
                         title: "Annual",
                         price: "£6.99/year",
-                        savings: "Save £4.89",
+                        savings: "Save 41%",
                         isSelected: selectedPlan == .yearly,
                         action: { selectedPlan = .yearly }
                     )
