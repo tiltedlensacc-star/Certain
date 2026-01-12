@@ -10,7 +10,6 @@ import SwiftUI
 import RevenueCat
 
 /// Manages all RevenueCat subscription and entitlement functionality
-@MainActor
 class RevenueCatManager: NSObject, ObservableObject {
     static let shared = RevenueCatManager()
 
@@ -31,6 +30,7 @@ class RevenueCatManager: NSObject, ObservableObject {
 
     // MARK: - Initialization
     private override init() {
+        super.init()
         // Configuration happens in configure()
     }
 
@@ -44,34 +44,32 @@ class RevenueCatManager: NSObject, ObservableObject {
         Purchases.shared.delegate = self
 
         // Initial fetch of customer info
-        Task {
+        Task { @MainActor in
             await fetchCustomerInfo()
         }
     }
 
     // MARK: - Customer Info
     /// Fetch current customer info and update entitlement status
+    @MainActor
     func fetchCustomerInfo() async {
         isLoading = true
 
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
-            await MainActor.run {
-                self.customerInfo = customerInfo
-                self.isPremium = customerInfo.entitlements[entitlementIdentifier]?.isActive == true
-                self.isLoading = false
-            }
+            self.customerInfo = customerInfo
+            self.isPremium = customerInfo.entitlements[entitlementIdentifier]?.isActive == true
+            self.isLoading = false
         } catch {
             print("Failed to fetch customer info: \(error.localizedDescription)")
-            await MainActor.run {
-                self.isPremium = false
-                self.isLoading = false
-            }
+            self.isPremium = false
+            self.isLoading = false
         }
     }
 
     // MARK: - Purchases
     /// Purchase a specific package
+    @MainActor
     func purchase(package: Package) async throws -> CustomerInfo {
         isLoading = true
 
@@ -79,48 +77,39 @@ class RevenueCatManager: NSObject, ObservableObject {
             let result = try await Purchases.shared.purchase(package: package)
             let customerInfo = result.customerInfo
 
-            await MainActor.run {
-                self.customerInfo = customerInfo
-                self.isPremium = customerInfo.entitlements[entitlementIdentifier]?.isActive == true
-                self.isLoading = false
-            }
+            self.customerInfo = customerInfo
+            self.isPremium = customerInfo.entitlements[entitlementIdentifier]?.isActive == true
+            self.isLoading = false
 
             return customerInfo
         } catch let error as ErrorCode {
             print("❌ Purchase Error Code: \(error.errorCode)")
             print("❌ Purchase Error: \(error.localizedDescription)")
-            await MainActor.run {
-                self.isLoading = false
-            }
+            self.isLoading = false
             throw error
         } catch {
             print("❌ Purchase Error: \(error.localizedDescription)")
-            await MainActor.run {
-                self.isLoading = false
-            }
+            self.isLoading = false
             throw error
         }
     }
 
     // MARK: - Restore Purchases
     /// Restore previously purchased subscriptions
+    @MainActor
     func restorePurchases() async throws -> CustomerInfo {
         isLoading = true
 
         do {
             let customerInfo = try await Purchases.shared.restorePurchases()
 
-            await MainActor.run {
-                self.customerInfo = customerInfo
-                self.isPremium = customerInfo.entitlements[entitlementIdentifier]?.isActive == true
-                self.isLoading = false
-            }
+            self.customerInfo = customerInfo
+            self.isPremium = customerInfo.entitlements[entitlementIdentifier]?.isActive == true
+            self.isLoading = false
 
             return customerInfo
         } catch {
-            await MainActor.run {
-                self.isLoading = false
-            }
+            self.isLoading = false
             throw error
         }
     }
@@ -162,18 +151,18 @@ class RevenueCatManager: NSObject, ObservableObject {
 
     // MARK: - User Management
     /// Log in a user with a custom user ID (optional)
+    @MainActor
     func login(userId: String) async throws {
         _ = try await Purchases.shared.logIn(userId)
         await fetchCustomerInfo()
     }
 
     /// Log out the current user
+    @MainActor
     func logout() async throws {
         _ = try await Purchases.shared.logOut()
-        await MainActor.run {
-            self.isPremium = false
-            self.customerInfo = nil
-        }
+        self.isPremium = false
+        self.customerInfo = nil
     }
 }
 
