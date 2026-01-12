@@ -6,17 +6,18 @@
 //
 
 import SwiftUI
-import StoreKit
+import RevenueCat
+import RevenueCatUI
 
 struct OnboardingView: View {
     @Binding var isPresented: Bool
+    @Binding var justSubscribed: Bool
     @State private var currentPage = 0
     @State private var selectedPlan: SubscriptionPlan = .yearly
-    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @ObservedObject private var revenueCatManager = RevenueCatManager.shared
     @State private var isPurchasing = false
     @State private var showError = false
     @State private var errorMessage = ""
-    @State private var showSuccessNotification = false
 
     enum SubscriptionPlan {
         case monthly
@@ -115,32 +116,8 @@ struct OnboardingView: View {
                 .padding()
                 .padding(.bottom, 8)
             }
-
-            // Success notification overlay
-            if showSuccessNotification {
-                VStack {
-                    Spacer()
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.title2)
-                        Text("Subscription activated!")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(UIColor.systemBackground))
-                            .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
-                    )
-                    .padding(.bottom, 100)
-                }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.spring(), value: showSuccessNotification)
-            }
         }
-        .alert("Purchase Error", isPresented: $showError) {
+        .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }
         } message: {
             Text(errorMessage)
@@ -161,34 +138,39 @@ struct OnboardingView: View {
         isPurchasing = true
 
         do {
-            let product: Product?
-            switch selectedPlan {
-            case .monthly:
-                product = subscriptionManager.products.first(where: { $0.id == SubscriptionProduct.monthly.rawValue })
-            case .yearly:
-                product = subscriptionManager.products.first(where: { $0.id == SubscriptionProduct.yearly.rawValue })
-            case .free:
-                product = nil
+            // Get offerings
+            guard let offering = try await revenueCatManager.getCurrentOffering() else {
+                errorMessage = "Products not available. Please try again later."
+                showError = true
+                isPurchasing = false
+                return
             }
 
-            guard let product = product else {
+            // Find the selected package
+            let packageToPurchase: Package?
+            switch selectedPlan {
+            case .monthly:
+                packageToPurchase = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier.contains("monthly") })
+            case .yearly:
+                packageToPurchase = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier.contains("yearly") })
+            case .free:
+                packageToPurchase = nil
+            }
+
+            guard let package = packageToPurchase else {
                 errorMessage = "Product not available. Please try again later."
                 showError = true
                 isPurchasing = false
                 return
             }
 
-            let transaction = try await subscriptionManager.purchase(product)
+            _ = try await revenueCatManager.purchase(package: package)
 
             isPurchasing = false
 
-            // If purchase was successful, show success notification and complete onboarding
-            if transaction != nil {
-                showSuccessNotification = true
-
-                // Wait a moment for the notification to be visible
-                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-
+            // If purchase was successful, set flag and complete onboarding
+            if revenueCatManager.isPremium {
+                justSubscribed = true
                 completeOnboarding()
             }
         } catch {
@@ -306,6 +288,8 @@ struct OnboardingPage2: View {
 // MARK: - Page 3: Choose Your Plan
 struct OnboardingPage3: View {
     @Binding var selectedPlan: OnboardingView.SubscriptionPlan
+    @State private var packages: [Package] = []
+    @State private var isLoading = true
 
     var body: some View {
         VStack(spacing: 24) {
@@ -328,34 +312,58 @@ struct OnboardingPage3: View {
                     .foregroundColor(Color(hex: "#736CED")))
                     .font(.system(size: 32, weight: .regular, design: .rounded))
                     .multilineTextAlignment(.center)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text("For ultimate peace of mind and reassurance")
                     .font(.body)
                     .foregroundColor(Color(hex: "#4A4A4A"))
                     .opacity(0.7)
                     .multilineTextAlignment(.center)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 32)
             }
 
             // Plan options
             VStack(spacing: 12) {
                 // Annual
-                PlanButton(
-                    title: "Annual",
-                    price: "£6.99/year",
-                    savings: "Save £4.89",
-                    isSelected: selectedPlan == .yearly,
-                    action: { selectedPlan = .yearly }
-                )
+                if let yearlyPackage = packages.first(where: { $0.storeProduct.productIdentifier.contains("yearly") }) {
+                    OnboardingPlanButton(
+                        title: "Annual",
+                        price: yearlyPackage.localizedPriceString,
+                        savings: "Save £4.89",
+                        isSelected: selectedPlan == .yearly,
+                        action: { selectedPlan = .yearly }
+                    )
+                } else {
+                    OnboardingPlanButton(
+                        title: "Annual",
+                        price: "£6.99/year",
+                        savings: "Save £4.89",
+                        isSelected: selectedPlan == .yearly,
+                        action: { selectedPlan = .yearly }
+                    )
+                }
 
                 // Monthly
-                PlanButton(
-                    title: "Monthly",
-                    price: "£0.99/month",
-                    savings: nil,
-                    isSelected: selectedPlan == .monthly,
-                    action: { selectedPlan = .monthly }
-                )
+                if let monthlyPackage = packages.first(where: { $0.storeProduct.productIdentifier.contains("monthly") }) {
+                    OnboardingPlanButton(
+                        title: "Monthly",
+                        price: monthlyPackage.localizedPriceString,
+                        savings: nil,
+                        isSelected: selectedPlan == .monthly,
+                        action: { selectedPlan = .monthly }
+                    )
+                } else {
+                    OnboardingPlanButton(
+                        title: "Monthly",
+                        price: "£0.99/month",
+                        savings: nil,
+                        isSelected: selectedPlan == .monthly,
+                        action: { selectedPlan = .monthly }
+                    )
+                }
 
                 Text("or")
                     .font(.subheadline)
@@ -429,6 +437,21 @@ struct OnboardingPage3: View {
 
             Spacer()
         }
+        .task {
+            await loadOfferings()
+        }
+    }
+
+    private func loadOfferings() async {
+        do {
+            if let offering = try await RevenueCatManager.shared.getCurrentOffering() {
+                packages = offering.availablePackages
+                isLoading = false
+            }
+        } catch {
+            print("Failed to load offerings: \(error)")
+            isLoading = false
+        }
     }
 }
 
@@ -447,8 +470,8 @@ struct OnboardingFeatureRow: View {
     }
 }
 
-// MARK: - Plan Button Component
-struct PlanButton: View {
+// MARK: - Onboarding Plan Button Component
+struct OnboardingPlanButton: View {
     let title: String
     let price: String
     let savings: String?
@@ -531,5 +554,5 @@ struct OnboardingStep: View {
 }
 
 #Preview {
-    OnboardingView(isPresented: .constant(true))
+    OnboardingView(isPresented: .constant(true), justSubscribed: .constant(false))
 }

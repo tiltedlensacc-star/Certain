@@ -9,6 +9,11 @@ import SwiftUI
 
 @main
 struct CertainApp: App {
+    init() {
+        // Configure RevenueCat on app launch
+        RevenueCatManager.shared.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -20,6 +25,7 @@ struct CertainApp: App {
 struct RootView: View {
     @State private var showSplash = !UserDefaults.standard.bool(forKey: "hasSeenSplashScreen")
     @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+    @State private var justSubscribed = false
 
     var body: some View {
         ZStack {
@@ -27,10 +33,10 @@ struct RootView: View {
                 SplashScreenView(isPresented: $showSplash)
                     .transition(.opacity)
             } else if showOnboarding {
-                OnboardingView(isPresented: $showOnboarding)
+                OnboardingView(isPresented: $showOnboarding, justSubscribed: $justSubscribed)
                     .transition(.opacity)
             } else {
-                MainTabView()
+                MainTabView(justSubscribed: $justSubscribed)
                     .transition(.opacity)
             }
         }

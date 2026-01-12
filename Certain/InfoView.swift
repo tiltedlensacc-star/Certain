@@ -6,13 +6,15 @@
 //
 
 import SwiftUI
+import RevenueCatUI
 
 struct InfoView: View {
     @State private var showCertainPlus = false
-    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @ObservedObject private var revenueCatManager = RevenueCatManager.shared
     @State private var isRestoring = false
     @State private var showRestoreAlert = false
     @State private var restoreMessage = ""
+    @State private var showCustomerCenter = false
 
     var body: some View {
         ZStack {
@@ -43,7 +45,7 @@ struct InfoView: View {
                             .padding(.top, 8)
 
                         // Upgrade button
-                        if !subscriptionManager.isPremium {
+                        if !revenueCatManager.isPremium {
                             Button(action: {
                                 showCertainPlus = true
                             }) {
@@ -129,7 +131,7 @@ struct InfoView: View {
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity)
 
-                            if !subscriptionManager.isPremium {
+                            if !revenueCatManager.isPremium {
                                 Divider()
 
                                 Button(action: {
@@ -224,6 +226,60 @@ struct InfoView: View {
                                     title: "Terms of Use",
                                     url: "https://tiltedlensacc-star.github.io/Certain/terms-of-use.html"
                                 )
+
+                                // Manage Subscription (Customer Center)
+                                if revenueCatManager.isPremium {
+                                    Button(action: {
+                                        showCustomerCenter = true
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "gear.circle.fill")
+                                                .foregroundColor(Color(hex: "#736CED"))
+                                                .frame(width: 24)
+
+                                            Text("Manage Subscription")
+                                                .font(.body)
+                                                .foregroundColor(Color(hex: "#4A4A4A"))
+
+                                            Spacer()
+                                        }
+                                        .padding()
+                                        .background(Color(hex: "#736CED").opacity(0.05))
+                                        .cornerRadius(10)
+                                    }
+                                }
+
+                                // Restore Purchases Button (Always visible)
+                                Button(action: {
+                                    Task {
+                                        await handleRestore()
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: "arrow.clockwise.circle.fill")
+                                            .foregroundColor(Color(hex: "#736CED"))
+                                            .frame(width: 24)
+
+                                        if isRestoring {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "#736CED")))
+                                                .scaleEffect(0.8)
+                                            Text("Restoring Purchases...")
+                                                .font(.body)
+                                                .foregroundColor(Color(hex: "#4A4A4A"))
+                                        } else {
+                                            Text("Restore Purchases")
+                                                .font(.body)
+                                                .foregroundColor(Color(hex: "#4A4A4A"))
+                                        }
+
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .background(Color(hex: "#736CED").opacity(0.05))
+                                    .cornerRadius(10)
+                                }
+                                .disabled(isRestoring)
                             }
                         }
 
@@ -259,6 +315,9 @@ struct InfoView: View {
         .sheet(isPresented: $showCertainPlus) {
             CertainPlusView()
         }
+        .sheet(isPresented: $showCustomerCenter) {
+            CustomerCenterView()
+        }
         .alert("Restore Purchases", isPresented: $showRestoreAlert) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -268,10 +327,15 @@ struct InfoView: View {
 
     private func handleRestore() async {
         isRestoring = true
-        await subscriptionManager.restorePurchases()
-        isRestoring = false
 
-        restoreMessage = subscriptionManager.isPremium ? "Your subscription has been restored!" : "No previous purchases found."
+        do {
+            _ = try await revenueCatManager.restorePurchases()
+            restoreMessage = revenueCatManager.isPremium ? "Your subscription has been restored!" : "No previous purchases found."
+        } catch {
+            restoreMessage = "Failed to restore purchases: \(error.localizedDescription)"
+        }
+
+        isRestoring = false
         showRestoreAlert = true
     }
 
@@ -290,7 +354,7 @@ struct InfoView: View {
 
             HStack {
                 Spacer()
-                if subscriptionManager.isPremium {
+                if revenueCatManager.isPremium {
                     Image(systemName: "crown.fill")
                         .font(.title)
                         .foregroundColor(.yellow)

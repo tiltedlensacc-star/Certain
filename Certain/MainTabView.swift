@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @Binding var justSubscribed: Bool
     @State private var selectedTab = 0
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            ContentView()
+            ContentView(justSubscribed: $justSubscribed)
                 .tabItem {
                     Label("Items", systemImage: "checklist")
                 }
@@ -29,5 +30,5 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView()
+    MainTabView(justSubscribed: .constant(false))
 }

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Binding var justSubscribed: Bool
     @StateObject private var persistenceManager = PersistenceManager.shared
     @State private var showAddItem = false
     @State private var showDeleteAlert = false
@@ -28,7 +29,7 @@ struct ContentView: View {
     @State private var notificationMessage = ""
     @State private var notificationIcon = ""
     @State private var notificationColor: Color = .green
-    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @ObservedObject private var subscriptionManager = RevenueCatManager.shared
 
     var body: some View {
         ZStack {
@@ -179,6 +180,19 @@ struct ContentView: View {
             .onChange(of: persistenceManager.items.count) { oldValue, newValue in
                 if !subscriptionManager.isPremium && newValue == subscriptionManager.freeItemLimit && oldValue < newValue {
                     showLimitReachedAlert = true
+                }
+            }
+            .onAppear {
+                if justSubscribed {
+                    // Show success notification after a brief delay to ensure smooth transition
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        showNotificationBanner(
+                            message: "Subscription activated!",
+                            icon: "checkmark.circle.fill",
+                            color: .green
+                        )
+                        justSubscribed = false
+                    }
                 }
             }
     }
@@ -380,7 +394,7 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(justSubscribed: .constant(false))
 }
 
 // MARK: - View Extension for Specific Corner Radius

@@ -10,7 +10,7 @@ import SwiftUI
 struct AddItemView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var persistenceManager = PersistenceManager.shared
-    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @ObservedObject private var subscriptionManager = RevenueCatManager.shared
 
     var editingItem: SafetyItem?
     var onItemSaved: ((ItemType) -> Void)?

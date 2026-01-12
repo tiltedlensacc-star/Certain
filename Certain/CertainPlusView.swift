@@ -3,45 +3,26 @@
 //  Certain
 //
 //  Created by Ink Duangsri on 29/12/2025.
+//  Updated to use RevenueCat backend with custom UI
 //
 
 import SwiftUI
-import StoreKit
+import RevenueCat
 
 struct CertainPlusView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
-    @State private var selectedPlan: SubscriptionPlan = .monthly
+    @ObservedObject private var revenueCatManager = RevenueCatManager.shared
+    @State private var selectedPlan: SubscriptionPlan = .yearly
     @State private var isPurchasing = false
     @State private var isRestoring = false
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var showRestoreSuccess = false
+    @State private var packages: [Package] = []
 
     enum SubscriptionPlan {
         case monthly
         case yearly
-
-        var price: String {
-            switch self {
-            case .monthly: return "£0.99"
-            case .yearly: return "£6.99"
-            }
-        }
-
-        var period: String {
-            switch self {
-            case .monthly: return "month"
-            case .yearly: return "year"
-            }
-        }
-
-        var savings: String? {
-            switch self {
-            case .monthly: return nil
-            case .yearly: return "Save £4.89"
-            }
-        }
     }
 
     var body: some View {
@@ -104,22 +85,42 @@ struct CertainPlusView: View {
                         // Pricing options
                         VStack(spacing: 12) {
                             // Annual
-                            CertainPlusPlanButton(
-                                title: "Annual",
-                                price: "£6.99/year",
-                                savings: "Save £4.89",
-                                isSelected: selectedPlan == .yearly,
-                                action: { selectedPlan = .yearly }
-                            )
+                            if let yearlyPackage = packages.first(where: { $0.storeProduct.productIdentifier.contains("yearly") }) {
+                                CertainPlusPlanButton(
+                                    title: "Annual",
+                                    price: yearlyPackage.localizedPriceString,
+                                    savings: "Save £4.89",
+                                    isSelected: selectedPlan == .yearly,
+                                    action: { selectedPlan = .yearly }
+                                )
+                            } else {
+                                CertainPlusPlanButton(
+                                    title: "Annual",
+                                    price: "£6.99/year",
+                                    savings: "Save £4.89",
+                                    isSelected: selectedPlan == .yearly,
+                                    action: { selectedPlan = .yearly }
+                                )
+                            }
 
                             // Monthly
-                            CertainPlusPlanButton(
-                                title: "Monthly",
-                                price: "£0.99/month",
-                                savings: nil,
-                                isSelected: selectedPlan == .monthly,
-                                action: { selectedPlan = .monthly }
-                            )
+                            if let monthlyPackage = packages.first(where: { $0.storeProduct.productIdentifier.contains("monthly") }) {
+                                CertainPlusPlanButton(
+                                    title: "Monthly",
+                                    price: monthlyPackage.localizedPriceString,
+                                    savings: nil,
+                                    isSelected: selectedPlan == .monthly,
+                                    action: { selectedPlan = .monthly }
+                                )
+                            } else {
+                                CertainPlusPlanButton(
+                                    title: "Monthly",
+                                    price: "£0.99/month",
+                                    savings: nil,
+                                    isSelected: selectedPlan == .monthly,
+                                    action: { selectedPlan = .monthly }
+                                )
+                            }
                         }
                         .padding(.horizontal, 24)
 
@@ -223,6 +224,9 @@ struct CertainPlusView: View {
                 }
             }
         }
+        .task {
+            await loadOfferings()
+        }
         .alert("Purchase Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -230,12 +234,28 @@ struct CertainPlusView: View {
         }
         .alert("Restore Successful", isPresented: $showRestoreSuccess) {
             Button("OK", role: .cancel) {
-                if subscriptionManager.isPremium {
+                if revenueCatManager.isPremium {
                     dismiss()
                 }
             }
         } message: {
-            Text(subscriptionManager.isPremium ? "Your subscription has been restored!" : "No previous purchases found.")
+            Text(revenueCatManager.isPremium ? "Your subscription has been restored!" : "No previous purchases found.")
+        }
+    }
+
+    private func loadOfferings() async {
+        do {
+            if let offering = try await revenueCatManager.getCurrentOffering() {
+                packages = offering.availablePackages
+                print("📦 Loaded \(packages.count) packages from RevenueCat:")
+                for package in packages {
+                    print("  - \(package.storeProduct.productIdentifier): \(package.localizedPriceString)")
+                }
+            } else {
+                print("⚠️ No current offering found in RevenueCat")
+            }
+        } catch {
+            print("❌ Failed to load offerings: \(error)")
         }
     }
 
@@ -243,27 +263,28 @@ struct CertainPlusView: View {
         isPurchasing = true
 
         do {
-            let product: Product?
+            // Find the selected package
+            let packageToPurchase: Package?
             switch selectedPlan {
             case .monthly:
-                product = subscriptionManager.products.first(where: { $0.id == SubscriptionProduct.monthly.rawValue })
+                packageToPurchase = packages.first(where: { $0.storeProduct.productIdentifier.contains("monthly") })
             case .yearly:
-                product = subscriptionManager.products.first(where: { $0.id == SubscriptionProduct.yearly.rawValue })
+                packageToPurchase = packages.first(where: { $0.storeProduct.productIdentifier.contains("yearly") })
             }
 
-            guard let product = product else {
+            guard let package = packageToPurchase else {
                 errorMessage = "Product not available. Please try again later."
                 showError = true
                 isPurchasing = false
                 return
             }
 
-            let transaction = try await subscriptionManager.purchase(product)
+            _ = try await revenueCatManager.purchase(package: package)
 
             isPurchasing = false
 
-            // Only dismiss if purchase was successful
-            if transaction != nil {
+            // Dismiss if purchase was successful
+            if revenueCatManager.isPremium {
                 dismiss()
             }
         } catch {
@@ -276,7 +297,12 @@ struct CertainPlusView: View {
     private func handleRestore() async {
         isRestoring = true
 
-        await subscriptionManager.restorePurchases()
+        do {
+            _ = try await revenueCatManager.restorePurchases()
+        } catch {
+            errorMessage = "Failed to restore purchases."
+            showError = true
+        }
 
         isRestoring = false
         showRestoreSuccess = true

@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		22692CD82F15502A00FEC1FE /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 22692CD72F15502A00FEC1FE /* RevenueCat */; };
+		22692CDA2F15502A00FEC1FE /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 22692CD92F15502A00FEC1FE /* RevenueCatUI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		22C50EF02EF44BCB000FED8C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22692CDA2F15502A00FEC1FE /* RevenueCatUI in Frameworks */,
+				22692CD82F15502A00FEC1FE /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +119,8 @@
 			);
 			name = Certain;
 			packageProductDependencies = (
+				22692CD72F15502A00FEC1FE /* RevenueCat */,
+				22692CD92F15502A00FEC1FE /* RevenueCatUI */,
 			);
 			productName = Certain;
 			productReference = 22C50EE22EF44BC8000FED8C /* Certain.app */;
@@ -195,6 +204,9 @@
 			);
 			mainGroup = 22C50ED92EF44BC8000FED8C;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				22692CD62F15502A00FEC1FE /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 22C50EE32EF44BC8000FED8C /* Products */;
 			projectDirPath = "";
@@ -554,6 +566,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		22692CD62F15502A00FEC1FE /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.54.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		22692CD72F15502A00FEC1FE /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 22692CD62F15502A00FEC1FE /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+		22692CD92F15502A00FEC1FE /* RevenueCatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 22692CD62F15502A00FEC1FE /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCatUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 22C50EDA2EF44BC8000FED8C /* Project object */;
 }
