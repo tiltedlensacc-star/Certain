@@ -8,6 +8,7 @@
 
 import SwiftUI
 import RevenueCat
+import PostHog
 
 struct CertainPlusView: View {
     @Environment(\.dismiss) private var dismiss
@@ -226,6 +227,9 @@ struct CertainPlusView: View {
         }
         .task {
             await loadOfferings()
+        }
+        .onAppear {
+            PostHogSDK.shared.capture("certain_plus_opened")
         }
         .alert("Purchase Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }

@@ -8,6 +8,7 @@
 import SwiftUI
 import RevenueCat
 import RevenueCatUI
+import PostHog
 
 struct OnboardingView: View {
     @Binding var isPresented: Bool
@@ -126,6 +127,12 @@ struct OnboardingView: View {
 
     private func completeOnboarding() {
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+
+        // Track onboarding completed
+        PostHogSDK.shared.capture("onboarding_completed", properties: [
+            "selected_plan": String(describing: selectedPlan)
+        ])
+
         isPresented = false
     }
 
@@ -424,13 +431,7 @@ struct OnboardingPage3: View {
                             .foregroundColor(Color(hex: "#736CED"))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.white)
-                    .cornerRadius(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color(hex: "#736CED"), lineWidth: 1.5)
-                    )
+                    .padding(.vertical, 4)
                 }
                 .disabled(isRestoring)
                 .padding(.top, 8)
@@ -466,7 +467,6 @@ struct OnboardingPage3: View {
                         .underline()
                 }
             }
-            .padding(.top, 12)
 
             Spacer()
         }

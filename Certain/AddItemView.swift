@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PostHog
 
 struct AddItemView: View {
     @Environment(\.dismiss) private var dismiss
@@ -172,6 +173,12 @@ struct AddItemView: View {
 
             persistenceManager.addItem(newItem)
             onItemSaved?(selectedType)
+
+            // Track item creation
+            PostHogSDK.shared.capture("item_created", properties: [
+                "item_type": selectedType.rawValue,
+                "room": finalRoom
+            ])
         }
 
         dismiss()

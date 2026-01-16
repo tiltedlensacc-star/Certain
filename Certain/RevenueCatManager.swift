@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import RevenueCat
+import PostHog
 
 /// Manages all RevenueCat subscription and entitlement functionality
 class RevenueCatManager: NSObject, ObservableObject {
@@ -81,6 +82,14 @@ class RevenueCatManager: NSObject, ObservableObject {
             self.customerInfo = customerInfo
             self.isPremium = customerInfo.entitlements[entitlementIdentifier]?.isActive == true
             self.isLoading = false
+
+            // Track subscription purchase
+            if self.isPremium {
+                PostHogSDK.shared.capture("subscription_purchased", properties: [
+                    "product_id": package.storeProduct.productIdentifier,
+                    "price": NSDecimalNumber(decimal: package.storeProduct.price).doubleValue
+                ])
+            }
 
             return customerInfo
         } catch let error as ErrorCode {

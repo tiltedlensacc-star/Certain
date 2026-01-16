@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import PostHog
 
 struct ConfirmationView: View {
     @Environment(\.dismiss) private var dismiss
@@ -196,11 +197,27 @@ struct ConfirmationView: View {
 
     private func confirmWithPhoto() {
         let _ = persistenceManager.confirmItem(item, photo: capturedImage)
+
+        // Track confirmation with photo
+        PostHogSDK.shared.capture("item_confirmed", properties: [
+            "item_type": item.type.rawValue,
+            "with_photo": true,
+            "is_update": isUpdate
+        ])
+
         dismiss()
     }
 
     private func confirmWithoutPhoto() {
         let _ = persistenceManager.confirmItem(item, photo: nil)
+
+        // Track confirmation without photo
+        PostHogSDK.shared.capture("item_confirmed", properties: [
+            "item_type": item.type.rawValue,
+            "with_photo": false,
+            "is_update": isUpdate
+        ])
+
         dismiss()
     }
 }

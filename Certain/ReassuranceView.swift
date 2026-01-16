@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PostHog
 
 struct ReassuranceView: View {
     @Environment(\.dismiss) private var dismiss
@@ -199,6 +200,12 @@ struct ReassuranceView: View {
                let photo = persistenceManager.loadPhoto(filename: filename) {
                 FullScreenPhotoView(photo: photo)
             }
+        }
+        .onAppear {
+            PostHogSDK.shared.capture("reassurance_opened", properties: [
+                "item_type": item.type.rawValue,
+                "has_photo": item.photoFilename != nil
+            ])
         }
     }
 }

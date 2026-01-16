@@ -6,12 +6,17 @@
 //
 
 import SwiftUI
+import PostHog
 
 @main
 struct CertainApp: App {
     init() {
         // Configure RevenueCat on app launch
         RevenueCatManager.shared.configure()
+
+        // Configure PostHog analytics
+        let config = PostHogConfig(apiKey: "phc_eE8awo9WXcX44fvCNo5lxH7euRoBH75ac3by6P3uk1w", host: "https://eu.i.posthog.com")
+        PostHogSDK.shared.setup(config)
     }
 
     var body: some Scene {
